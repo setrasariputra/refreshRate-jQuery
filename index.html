@@ -41,7 +41,7 @@
         .button-style:hover {
             background-color: #3caea3;
         }
-        .warning  {
+        .warning, .error  {
             font-style: italic;
             color:red;
         }
@@ -73,8 +73,11 @@
             // set init
             setFirstInit();
 
-            const totalCount = 0;
+            toggleButton();
+        });
 
+        function toggleButton() {
+            const totalCount = 0;
             let valid = false;
             $(".toggleButton").on("click", function() {
                 let apiURL = $("input[name='apiURL']").val();
@@ -106,7 +109,7 @@
                     }
                 }
             })
-        });
+        }
 
         function ajaxRequest(apiURL, timeout, totalCount) {
             try {

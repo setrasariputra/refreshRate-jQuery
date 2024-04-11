@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jquery RefreshRate</title>
+    <style>
+        body {
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+        .box-setting {
+            max-width: 500px;
+        }
+        legend {
+            padding:20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        .input-text {
+            padding: 10px;
+            width: 90%;
+            border-radius: 5px;
+            border: 1px solid #cccccc;
+        }
+        .input-number {
+            padding: 10px;
+            width: 50px;
+            border-radius: 5px;
+            border: 1px solid #cccccc;
+            text-align: center;
+        }       
+        .button-style {
+            border: 1px solid #cccccc;
+            padding: 10px 20px 10px 20px;
+            cursor: pointer;
+            background-color: #27689e;
+            border-radius: 3px;
+            color: #ffffff;
+        } 
+        .button-style:hover {
+            background-color: #3caea3;
+        }
+        .warning  {
+            font-style: italic;
+            color:red;
+        }
+    </style>
+</head>
+<body>
+    <h1>refreshRate with jQuery</h1>
+    <div class="box-setting">
+        <fieldset>
+            <legend>Setting</legend>
+            <label for="name">apiURL</label><br />
+            <input type="text" name="apiURL" class="input-text" /><br><br>
+
+            <label for="name">set Timeout</label><br />
+            <input type="number" name="timeout" class="input-number" value="5"/><br><br>  
+            <button class="toggleButton button-style">Start refreshRate</button> <small class="warning"></small>       
+        </fieldset>
+    </div>
+    <p class="timeoutDisplay"></p>
+    <p><i class="pending"></i></p>
+    <p><i class="result"></i></p>
+    <p><i class="error"></i></p>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script>
+        let start = false;
+        $(document).ready(function() {
+            // set init
+            setFirstInit();
+
+            const totalCount = 0;
+
+            let valid = false;
+            $(".toggleButton").on("click", function() {
+                let apiURL = $("input[name='apiURL']").val();
+                let timeout = $("input[name='timeout']").val();
+                if (apiURL === '' || timeout === '') {
+                    $(".warning").html('setting is still empty');
+                    valid = false;
+                }else{
+                    timeout = parseInt(timeout) * 1000;
+                    valid = true;
+                } 
+
+                if(valid === true) {  
+                    $(".warning").html('');
+                    $(".warning").hide;
+                    switch(start) {
+                        case false :
+                            start = true;
+                        break;
+                        case true :
+                            start = false;
+                        break;
+                    }
+                    if(start === true) {                   
+                        ajaxRequest(apiURL, timeout, totalCount);
+                    }
+                    if(start === false) {
+                        location.reload();
+                    }
+                }
+            })
+        });
+
+        function ajaxRequest(apiURL, timeout, totalCount) {
+            try {
+                setTriggerButton('hide')
+                setTimeoutDisplay('hide')  
+                $(".error").hide();
+
+                $(".pending").html("Getting data, please wait..");
+                $.ajax({
+                    url: apiURL,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        // set show Element
+                        setTriggerButton('show')
+                        let seconds = timeout/1000;
+                        setTimeoutDisplay('show', seconds)
+
+                        totalCount++;
+                        console.log(response);
+                        $(".pending").html("");
+                        $(".result").html("success refrestRate: <b>"+totalCount+"x</b>")
+
+                        // set trigger button
+                        $(".toggleButton").show();
+                        $(".toggleButton").html("Stop refreshRate")
+
+                        // Melakukan pengulangan permintaan AJAX
+                        setTimeout(function() {
+                            ajaxRequest(apiURL, timeout, totalCount);
+                        }, timeout); // Contoh: lakukan setiap 5 detik
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(status, error);
+                        $(".pending").html("");
+                        $(".error").show();
+                        $(".error").html("ERROR: "+xhr.responseJSON.msg)
+                        // set trigger button
+                        setTriggerButton('refresh');     
+                        start = false;      
+                    }
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function setTriggerButton(value) {
+            if(value === 'show') {
+                $(".toggleButton").show();
+                $(".toggleButton").html("Stop refreshRate")
+            }else
+            if(value === 'hide') {
+                $(".toggleButton").hide();
+            }else
+            if(value === 'refresh') {
+                $(".toggleButton").show();
+                $(".toggleButton").html("Start refreshRate")
+            }
+        }
+
+        function setTimeoutDisplay(value, seconds) {
+            if(value === 'show') {
+                $(".timeoutDisplay").show();
+                $(".timeoutDisplay").html("get refresh on <b>"+seconds+"</b> second");
+                seconds = seconds - 1;
+                let countdownInterval = setInterval(function() {
+                    $(".timeoutDisplay").html("get refresh on <b>"+seconds+"</b> second");
+                    seconds--;
+                    if (seconds < 0) {
+                        clearInterval(countdownInterval);
+                    }
+                }, 1000);
+            }else
+            if(value === 'hide') {
+                $(".timeoutDisplay").hide();
+            }
+        }
+
+        function setFirstInit() {
+            $(".timeoutDisplay").hide();
+            $(".toggleButton").show();
+            $(".error").hide();
+        }
+    </script>
+</body>
+</html>

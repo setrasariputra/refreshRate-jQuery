@@ -45,6 +45,9 @@
             font-style: italic;
             color:red;
         }
+        .color-red {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -52,10 +55,13 @@
     <div class="box-setting">
         <fieldset>
             <legend>Setting</legend>
-            <label for="name">apiURL</label><br />
+            <label for="name">apiURL <span class="color-red">*</span></label><br />
             <input type="text" name="apiURL" class="input-text" /><br><br>
 
-            <label for="name">set Timeout</label><br />
+            <label for="name">Bearer Token (optional)</label><br />
+            <textarea name="bearer_token" class="input-text"></textarea><br><br>            
+
+            <label for="name">set Timeout <span class="color-red">*</span></label><br />
             <input type="number" name="timeout" class="input-number" value="5"/><br><br>  
             <button class="toggleButton button-style">Start refreshRate</button> <small class="warning"></small>       
         </fieldset>
@@ -82,6 +88,7 @@
             $(".toggleButton").on("click", function() {
                 let apiURL = $("input[name='apiURL']").val();
                 let timeout = $("input[name='timeout']").val();
+                let bearerToken = $("textarea[name='bearer_token']").val();
                 if (apiURL === '' || timeout === '') {
                     $(".warning").html('setting is still empty');
                     valid = false;
@@ -102,7 +109,7 @@
                         break;
                     }
                     if(start === true) {                   
-                        ajaxRequest(apiURL, timeout, totalCount);
+                        ajaxRequest(apiURL, timeout, bearerToken, totalCount);
                     }
                     if(start === false) {
                         location.reload();
@@ -111,17 +118,24 @@
             })
         }
 
-        function ajaxRequest(apiURL, timeout, totalCount) {
+        function ajaxRequest(apiURL, timeout, bearerToken = null, totalCount) {
             try {
                 setTriggerButton('hide')
                 setTimeoutDisplay('hide')  
                 $(".error").hide();
 
                 $(".pending").html("Getting data, please wait..");
+                let headers = {};
+                if (bearerToken) {
+                    headers = {
+                        'Authorization': 'Bearer ' + bearerToken
+                    };
+                }             
                 $.ajax({
                     url: apiURL,
                     method: 'GET',
                     dataType: 'json',
+                    headers: headers,
                     success: function(response) {
                         // set show Element
                         setTriggerButton('show')
@@ -139,7 +153,7 @@
 
                         // Melakukan pengulangan permintaan AJAX
                         setTimeout(function() {
-                            ajaxRequest(apiURL, timeout, totalCount);
+                            ajaxRequest(apiURL, timeout, bearerToken, totalCount);
                         }, timeout); // Contoh: lakukan setiap 5 detik
                     },
                     error: function(xhr, status, error) {
